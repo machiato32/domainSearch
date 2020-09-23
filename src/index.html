@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Domain</title>
+    <!-- https://electronjs.org/docs/tutorial/security#csp-meta-tag -->
+    <script>var exports = {};</script>
+
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="../node_modules/materialize-css/dist/css/materialize.min.css"  media="screen,projection"/>
+    <link type="text/css" rel="stylesheet" href="../custom.css"  media="screen,projection"/>
+
+    <script type="text/javascript" src="../node_modules/materialize-css/dist/js/materialize.min.js"></script>
+    <script type="text/javascript" src="buttonClick.js"></script>
+  </head>
+  <body>
+    
+    <nav>
+        <div class="nav-wrapper" >
+            <a href="#" class="brand-logo center">Domain</a>
+            <ul id="nav-mobile" class="left">
+                <li><a href="history.html">Előzmények</a></li>
+                <li><a href="index.html">Új domainek</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="row">
+            <div class="col s12" id="result-column">
+                <div class="center">
+                    <a class="waves-effect waves-light btn indigo darken-4" onclick="onClick()" style="margin-bottom: 15px; margin-top: 15px;"><i class="material-icons left">search</i>Új domainek lekérése</a>   
+
+                </div>
+             </div>
+        </div>
+        
+    </div>
+    
+    
+    <div class="center" id="loadingDiv" style="visibility: hidden;">
+        <div class='right preloader-wrapper active'>
+            <div class='spinner-layer spinner'>
+            <div class='circle-clipper left'>
+                <div class='circle'></div>
+            </div><div class='gap-patch'>
+                <div class='circle'></div>
+            </div><div class='circle-clipper right'>
+                <div class='circle'></div>
+            </div>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>
