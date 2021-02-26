@@ -7,7 +7,7 @@ import {partial_ratio} from 'fuzzball';
 export function onDeleteDomain(name : string, date : string, id : number){
   // console.log(domains.join('\n'));
   var domains : Domain[] = [];
-  var historyText : string = fs.readFileSync('./assets/history.txt', 'utf-8');
+  var historyText : string = fs.readFileSync(__dirname+'/history.txt', 'utf-8');
   // console.log(historyText);
   historyText.split('\n').forEach((line)=>{
     var splittedLine = line.split(';,;');
@@ -22,14 +22,14 @@ export function onDeleteDomain(name : string, date : string, id : number){
   if (index > -1) {
     domains.splice(index, 1);
   }
-  fs.writeFileSync('./assets/history.txt', domains.join('\n'), { flag: 'w' });
+  fs.writeFileSync(__dirname+'/history.txt', domains.join('\n'), { flag: 'w' });
 }
 
 export function loadHistory() : void{
   // console.log('start');
   // var history : Domain[] = [];
   var domains : Domain[] = [];
-  var historyText : string = fs.readFileSync('./assets/history.txt', 'utf-8');
+  var historyText : string = fs.readFileSync(__dirname+'/history.txt', 'utf-8');
   // console.log(historyText);
   historyText.split('\n').forEach((line)=>{
     var splittedLine = line.split(';,;');
@@ -50,7 +50,7 @@ export function loadHistory() : void{
                 <p>Kulcsszó: ${domain.matchingKey}</p>
             </blockquote>
             <div class="row">
-                <a class="waves-effect waves-light btn-flat" href="http://www.domain.hu/domain/varolista/${domain.url}" target="_blank">Részletek</a>
+                <a class="waves-effect waves-light btn-flat" onclick="onOpenDomain('${domain.url}')">Részletek</a>
                 <a class="waves-effect waves-light btn-flat" onclick="onDeleteDomain('${domain.name}', '${domain.sendDate}', ${index})">Törlés</a>
             </div>
         </div>
@@ -64,6 +64,18 @@ export function loadHistory() : void{
   });
 }
 
+export function onOpenDomain(url : string){
+  const { shell } = require('electron');
+  shell.openExternal('https://info.domain.hu/'+url);
+  
+}
+
+export function getPosition(string : string, subString : string, index : number) {
+  return string.split(subString, index).join(subString).length;
+}
+
+
+
 export function onClick() : void {
   var domains : Domain[] = [];
   let loader = document.getElementById('loadingDiv');
@@ -71,24 +83,25 @@ export function onClick() : void {
       loader.style.visibility="visible";
   }
   var request = new XMLHttpRequest();
-  request.open('GET', 'http://www.domain.hu/domain/varolista/ido.html', true);
-  request.overrideMimeType('text/html; charset=iso-8859-2');
+  // request.open('GET', 'http://www.domain.hu/domain/varolista/ido.html', true);
+  request.open('GET', 'https://info.domain.hu/varolista/hu/ido.html', true);
+  request.overrideMimeType('text/html; charset=UTF8');
   
   request.onload = function() {
       if (this.status >= 200 && this.status < 400) {
-          
+          console.log(this.response);
           var element = document.createElement('html');
           element.innerHTML=this.response;
           var elements = element.getElementsByTagName('table')[0].getElementsByTagName('tr');
           var alreadyFoundDomains : Domain[] = [];
-          var alreadyFound : string = fs.readFileSync('./assets/alreadyFound.txt', 'utf-8');
+          var alreadyFound : string = fs.readFileSync(__dirname+'/alreadyFound.txt', 'utf-8');
           alreadyFound.split('\n').forEach((line)=>{
             var splittedLine = line.split(';,;');
             var domain : Domain = new Domain(splittedLine[0], splittedLine[1], new Date(Date.parse(splittedLine[2])), splittedLine[3], splittedLine[4]);
             alreadyFoundDomains.push(domain);
           });
           var keywords : string[] = [];
-          fs.readFileSync('./assets/keywords.txt', 'utf-8').split(';').forEach((keyword)=>{
+          fs.readFileSync(__dirname+'/keywords.txt', 'utf-8').split(';').forEach((keyword)=>{
               keywords.push(keyword);
           });
         
@@ -96,7 +109,8 @@ export function onClick() : void {
               const element = elements[i];
               const tds = element.getElementsByTagName('td');
               var first = tds[4].innerHTML.indexOf('"');
-              var last = tds[4].innerHTML.lastIndexOf('"');
+              // var last = tds[4].innerHTML.lastIndexOf('"');
+              var last = getPosition(tds[4].innerHTML, '"', 2);
               keywords.forEach((keyword)=>{
                   let needs = 100;
                   if (keyword.length > 3)
@@ -125,11 +139,12 @@ export function onClick() : void {
                           <p>Kulcsszó: ${domain.matchingKey}</p>
                       </blockquote>
                       <div class="row">
-                          <a class="waves-effect waves-light btn-flat" href="http://www.domain.hu/domain/varolista/${domain.url}" target="_blank">Részletek</a>
+                          <a class="waves-effect waves-light btn-flat" onclick="onOpenDomain('${domain.url}')">Részletek</a>
                           <a class="waves-effect waves-light btn-flat" onclick="onDeleteDomain('${domain.name}', '${domain.sendDate}', ${index})">Törlés</a>
                       </div>
                   </div>
               `;
+              //<a class="waves-effect waves-light btn-flat" href="https://info.domain.hu/${domain.url}" target="_blank">Részletek</a>
               var element = document.createElement('div');
               element.classList.add('card');
               element.id="card"+index.toString();
@@ -138,12 +153,12 @@ export function onClick() : void {
               index++;
           });
           if(domains.length>0){
-              fs.appendFile('./assets/alreadyFound.txt', domains.join('\n'), function(err) {
+              fs.appendFile(__dirname+'/alreadyFound.txt', domains.join('\n'), function(err) {
                 if (err) 
                   return console.error(err);
                 console.log('Saved!');
               });
-              fs.appendFile('./assets/history.txt', domains.join('\n'), function(err) {
+              fs.appendFile(__dirname+'/history.txt', domains.join('\n'), function(err) {
                 if (err) 
                   return console.error(err);
                 console.log('Saved!');

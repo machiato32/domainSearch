@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onClick = exports.loadHistory = exports.onDeleteDomain = void 0;
+exports.onClick = exports.getPosition = exports.onOpenDomain = exports.loadHistory = exports.onDeleteDomain = void 0;
 var domain_1 = require("./domain");
 var fs = __importStar(require("fs"));
 var fuzzball_1 = require("fuzzball");
@@ -27,7 +27,7 @@ function onDeleteDomain(name, date, id) {
     var _a;
     // console.log(domains.join('\n'));
     var domains = [];
-    var historyText = fs.readFileSync('./assets/history.txt', 'utf-8');
+    var historyText = fs.readFileSync(__dirname + '/history.txt', 'utf-8');
     // console.log(historyText);
     historyText.split('\n').forEach(function (line) {
         var splittedLine = line.split(';,;');
@@ -42,14 +42,14 @@ function onDeleteDomain(name, date, id) {
     if (index > -1) {
         domains.splice(index, 1);
     }
-    fs.writeFileSync('./assets/history.txt', domains.join('\n'), { flag: 'w' });
+    fs.writeFileSync(__dirname + '/history.txt', domains.join('\n'), { flag: 'w' });
 }
 exports.onDeleteDomain = onDeleteDomain;
 function loadHistory() {
     // console.log('start');
     // var history : Domain[] = [];
     var domains = [];
-    var historyText = fs.readFileSync('./assets/history.txt', 'utf-8');
+    var historyText = fs.readFileSync(__dirname + '/history.txt', 'utf-8');
     // console.log(historyText);
     historyText.split('\n').forEach(function (line) {
         var splittedLine = line.split(';,;');
@@ -61,7 +61,7 @@ function loadHistory() {
     var index = 0;
     domains.forEach(function (domain) {
         var _a;
-        var inner = "\n        <div class=\"card-content black-text\">\n            <span class=\"card-title\">" + domain.name + "</span>\n            <blockquote>\n                <p>Bek\u00FCld\u0151: " + domain.sender + "</p>\n                <p>Regisztr\u00E1ci\u00F3 id\u0151pontja: " + domain.sendDate.toDateString() + "</p>\n                <p>Panasz beny\u00FAjt\u00E1s\u00E1nak hat\u00E1rideje: " + domain.deadlineDate.toDateString() + "</p>\n                <p>Kulcssz\u00F3: " + domain.matchingKey + "</p>\n            </blockquote>\n            <div class=\"row\">\n                <a class=\"waves-effect waves-light btn-flat\" href=\"http://www.domain.hu/domain/varolista/" + domain.url + "\" target=\"_blank\">R\u00E9szletek</a>\n                <a class=\"waves-effect waves-light btn-flat\" onclick=\"onDeleteDomain('" + domain.name + "', '" + domain.sendDate + "', " + index + ")\">T\u00F6rl\u00E9s</a>\n            </div>\n        </div>\n    ";
+        var inner = "\n        <div class=\"card-content black-text\">\n            <span class=\"card-title\">" + domain.name + "</span>\n            <blockquote>\n                <p>Bek\u00FCld\u0151: " + domain.sender + "</p>\n                <p>Regisztr\u00E1ci\u00F3 id\u0151pontja: " + domain.sendDate.toDateString() + "</p>\n                <p>Panasz beny\u00FAjt\u00E1s\u00E1nak hat\u00E1rideje: " + domain.deadlineDate.toDateString() + "</p>\n                <p>Kulcssz\u00F3: " + domain.matchingKey + "</p>\n            </blockquote>\n            <div class=\"row\">\n                <a class=\"waves-effect waves-light btn-flat\" onclick=\"onOpenDomain('" + domain.url + "')\">R\u00E9szletek</a>\n                <a class=\"waves-effect waves-light btn-flat\" onclick=\"onDeleteDomain('" + domain.name + "', '" + domain.sendDate + "', " + index + ")\">T\u00F6rl\u00E9s</a>\n            </div>\n        </div>\n    ";
         var element = document.createElement('div');
         element.classList.add('card');
         element.id = "card" + index.toString();
@@ -71,6 +71,15 @@ function loadHistory() {
     });
 }
 exports.loadHistory = loadHistory;
+function onOpenDomain(url) {
+    var shell = require('electron').shell;
+    shell.openExternal('https://info.domain.hu/' + url);
+}
+exports.onOpenDomain = onOpenDomain;
+function getPosition(string, subString, index) {
+    return string.split(subString, index).join(subString).length;
+}
+exports.getPosition = getPosition;
 function onClick() {
     var domains = [];
     var loader = document.getElementById('loadingDiv');
@@ -78,29 +87,32 @@ function onClick() {
         loader.style.visibility = "visible";
     }
     var request = new XMLHttpRequest();
-    request.open('GET', 'http://www.domain.hu/domain/varolista/ido.html', true);
-    request.overrideMimeType('text/html; charset=iso-8859-2');
+    // request.open('GET', 'http://www.domain.hu/domain/varolista/ido.html', true);
+    request.open('GET', 'https://info.domain.hu/varolista/hu/ido.html', true);
+    request.overrideMimeType('text/html; charset=UTF8');
     request.onload = function () {
         if (this.status >= 200 && this.status < 400) {
+            console.log(this.response);
             var element = document.createElement('html');
             element.innerHTML = this.response;
             var elements = element.getElementsByTagName('table')[0].getElementsByTagName('tr');
             var alreadyFoundDomains = [];
-            var alreadyFound = fs.readFileSync('./assets/alreadyFound.txt', 'utf-8');
+            var alreadyFound = fs.readFileSync(__dirname + '/alreadyFound.txt', 'utf-8');
             alreadyFound.split('\n').forEach(function (line) {
                 var splittedLine = line.split(';,;');
                 var domain = new domain_1.Domain(splittedLine[0], splittedLine[1], new Date(Date.parse(splittedLine[2])), splittedLine[3], splittedLine[4]);
                 alreadyFoundDomains.push(domain);
             });
             var keywords = [];
-            fs.readFileSync('./assets/keywords.txt', 'utf-8').split(';').forEach(function (keyword) {
+            fs.readFileSync(__dirname + '/keywords.txt', 'utf-8').split(';').forEach(function (keyword) {
                 keywords.push(keyword);
             });
             var _loop_1 = function (i) {
                 var element_1 = elements[i];
                 var tds = element_1.getElementsByTagName('td');
                 first = tds[4].innerHTML.indexOf('"');
-                last = tds[4].innerHTML.lastIndexOf('"');
+                // var last = tds[4].innerHTML.lastIndexOf('"');
+                last = getPosition(tds[4].innerHTML, '"', 2);
                 keywords.forEach(function (keyword) {
                     var needs = 100;
                     if (keyword.length > 3) {
@@ -121,7 +133,8 @@ function onClick() {
             var index_1 = 0;
             domains.forEach(function (domain) {
                 var _a;
-                var inner = "\n                  <div class=\"card-content black-text\">\n                      <span class=\"card-title\">" + domain.name + "</span>\n                      <blockquote>\n                          <p>Bek\u00FCld\u0151: " + domain.sender + "</p>\n                          <p>Regisztr\u00E1ci\u00F3 id\u0151pontja: " + domain.sendDate.toDateString() + "</p>\n                          <p>Fellebbez\u00E9s hat\u00E1rideje: " + domain.deadlineDate.toDateString() + "</p>\n                          <p>Kulcssz\u00F3: " + domain.matchingKey + "</p>\n                      </blockquote>\n                      <div class=\"row\">\n                          <a class=\"waves-effect waves-light btn-flat\" href=\"http://www.domain.hu/domain/varolista/" + domain.url + "\" target=\"_blank\">R\u00E9szletek</a>\n                          <a class=\"waves-effect waves-light btn-flat\" onclick=\"onDeleteDomain('" + domain.name + "', '" + domain.sendDate + "', " + index_1 + ")\">T\u00F6rl\u00E9s</a>\n                      </div>\n                  </div>\n              ";
+                var inner = "\n                  <div class=\"card-content black-text\">\n                      <span class=\"card-title\">" + domain.name + "</span>\n                      <blockquote>\n                          <p>Bek\u00FCld\u0151: " + domain.sender + "</p>\n                          <p>Regisztr\u00E1ci\u00F3 id\u0151pontja: " + domain.sendDate.toDateString() + "</p>\n                          <p>Fellebbez\u00E9s hat\u00E1rideje: " + domain.deadlineDate.toDateString() + "</p>\n                          <p>Kulcssz\u00F3: " + domain.matchingKey + "</p>\n                      </blockquote>\n                      <div class=\"row\">\n                          <a class=\"waves-effect waves-light btn-flat\" onclick=\"onOpenDomain('" + domain.url + "')\">R\u00E9szletek</a>\n                          <a class=\"waves-effect waves-light btn-flat\" onclick=\"onDeleteDomain('" + domain.name + "', '" + domain.sendDate + "', " + index_1 + ")\">T\u00F6rl\u00E9s</a>\n                      </div>\n                  </div>\n              ";
+                //<a class="waves-effect waves-light btn-flat" href="https://info.domain.hu/${domain.url}" target="_blank">Részletek</a>
                 var element = document.createElement('div');
                 element.classList.add('card');
                 element.id = "card" + index_1.toString();
@@ -130,12 +143,12 @@ function onClick() {
                 index_1++;
             });
             if (domains.length > 0) {
-                fs.appendFile('./assets/alreadyFound.txt', domains.join('\n'), function (err) {
+                fs.appendFile(__dirname + '/alreadyFound.txt', domains.join('\n'), function (err) {
                     if (err)
                         return console.error(err);
                     console.log('Saved!');
                 });
-                fs.appendFile('./assets/history.txt', domains.join('\n'), function (err) {
+                fs.appendFile(__dirname + '/history.txt', domains.join('\n'), function (err) {
                     if (err)
                         return console.error(err);
                     console.log('Saved!');

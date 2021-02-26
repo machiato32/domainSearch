@@ -12,7 +12,7 @@ function createWindow() {
     });
     // and load the index.html of the app.
     win.loadFile(__dirname + '/index.html');
-    win.removeMenu();
+    // win.removeMenu();
     win.webContents.on('new-window', function (e, url) {
         e.preventDefault();
         electron_1.shell.openExternal(url);

@@ -5,7 +5,10 @@
   "main": "build/main.js",
   "scripts": {
     "start": "npm run compile && electron .",
-    "compile": "tsc && copyfiles -f src/index.html src/history.html build"
+    "compile": "tsc && copyfiles -f src/index.html src/history.html build && copyfiles -f build/src/*.js build",
+    "build:linux": "electron-packager . domain-search --overwrite --platform=linux --arch=x64 --prune=true --out=release-builds",
+    "build:mac": "electron-packager . domain-search --overwrite --platform=darwin --arch=x64 --prune=true --out=release-builds"
+
   },
   "author": "Samuel Szajbely",
   "license": "ISC",
